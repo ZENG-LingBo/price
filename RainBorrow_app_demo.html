@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RainBorrow App Demo</title>
+<meta name="description" content="Clickable mock-up of the RainBorrow app showing dynamic pricing on a rain day. TEMG3950 Group 1.">
+<style>
+:root{
+  --ink:#1F2A44; --ink2:#46506a; --mute:#6b7388; --line:#e3ded9; --line2:#eeeae6;
+  --rose:#DB5A6B; --brick:#B95B56; --rain:#7BA3C4; --rainsoft:#dbe7f1; --paper:#F7F1EE; --card:#ffffff;
+  --g:#2E8B57; --gs:#e2f3e9; --a:#B7791F; --as:#fbefd9; --r:#C0392B; --rs:#fbe3e0;
+  --focus:#2d6cdf;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#ECE6E2;color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 20px;display:flex;gap:28px;align-items:flex-start;justify-content:center}
+.stage{flex:0 0 auto}
+.panel{flex:1 1 420px;max-width:600px;min-width:0}
+
+/* ---------- phone ---------- */
+.phone{width:min(390px,calc(100vw - 20px));height:780px;border-radius:44px;background:#0f1424;padding:10px;box-shadow:0 30px 60px -20px rgba(31,42,68,.45),0 0 0 1px rgba(0,0,0,.2)}
+.screen{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;background:var(--paper);display:flex;flex-direction:column}
+.status{height:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;padding:6px 26px 0;font-size:13px;font-weight:600}
+.status .notch{width:96px;height:26px;border-radius:14px;background:#0f1424}
+.status .sig{display:flex;gap:5px;align-items:center}
+.appbar{flex:0 0 48px;display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid var(--line2);background:var(--paper)}
+.appbar .ttl{font-weight:750;font-size:17px;letter-spacing:-.01em}
+.appbar .sub{margin-left:auto;font-size:11.5px;color:var(--mute);text-align:right;line-height:1.2}
+.content{position:relative;flex:1 1 auto;overflow:hidden}
+.view{position:absolute;inset:0;overflow-y:auto;display:none;padding:14px 14px 18px}
+.view.on{display:block}
+.view.map{padding:0;overflow:hidden}
+.nav{flex:0 0 70px;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;background:#fff;border-top:1px solid var(--line2);padding:0 4px 12px;position:relative;z-index:30}
+.nav button{background:none;border:0;padding:6px 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--mute);border-radius:10px}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="page"]{color:var(--rose);font-weight:650}
+.nav .scanbtn{position:relative;top:-14px}
+.nav .scanbtn span.c{width:58px;height:58px;border-radius:50%;background:var(--rose);display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px -6px rgba(219,90,107,.7);border:4px solid #fff}
+.nav .scanbtn span.c svg{width:26px;height:26px}
+.nav .scanbtn{color:var(--ink)}
+
+/* map */
+.mapbox{position:absolute;inset:0;overflow:hidden;background:#dfe9f1}
+.mapinner{position:absolute;left:0;top:0;width:100%;aspect-ratio:390/612}
+.mapinner svg.base{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-100%);background:none;border:0;padding:0;width:40px;height:48px;border-radius:12px;transition:transform .25s}
+.pin:hover{transform:translate(-50%,-100%) scale(1.06)}
+.pin svg{width:40px;height:48px;display:block;overflow:visible}
+.pin .body{transition:fill .5s}
+.pin .num{font:800 13px var(--sans)}
+.pin.bump svg{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.18) translateY(-3px)}}
+.pin .crate{position:absolute;right:-12px;top:-6px;background:var(--ink);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;white-space:nowrap}
+.pin.sel svg .body{stroke:var(--ink);stroke-width:2.5}
+.me{position:absolute;width:16px;height:16px;border-radius:50%;background:#2d6cdf;border:3px solid #fff;transform:translate(-50%,-50%);box-shadow:0 0 0 6px rgba(45,108,223,.18)}
+.banner{position:absolute;left:10px;right:10px;top:10px;z-index:5;background:rgba(255,255,255,.96);border-radius:14px;padding:9px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 6px 16px -8px rgba(31,42,68,.35);font-size:12.5px;line-height:1.3}
+.banner b{display:block;font-size:13px}
+.banner.warn{background:#fff6e5}
+.banner.storm{background:var(--ink);color:#fff}
+.banner .ic{flex:0 0 30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--rainsoft)}
+.banner.storm .ic{background:rgba(255,255,255,.12)}
+.mapctl{position:absolute;right:10px;top:74px;z-index:5;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.legend{position:absolute;left:10px;bottom:10px;z-index:4;background:rgba(255,255,255,.93);border-radius:10px;padding:6px 9px;font-size:10.5px;display:flex;gap:9px;color:var(--ink2)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;vertical-align:-1px}
+.rental{position:absolute;left:10px;right:10px;bottom:10px;z-index:6;background:#fff;border-radius:16px;padding:10px 12px;box-shadow:0 8px 22px -10px rgba(31,42,68,.45);display:none;align-items:center;gap:10px;font-size:12.5px}
+.rental.on{display:flex}
+.rental .grow{flex:1;line-height:1.3}
+.btn{border:0;border-radius:12px;padding:10px 14px;font-weight:650;background:var(--rose);color:#fff}
+.btn.ink{background:var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:10px}
+.btn[disabled]{background:#e7e3df;color:#9a9fae;cursor:not-allowed;border-color:#e7e3df}
+.btn.block{display:block;width:100%}
+
+/* rain overlay */
+.rainlayer{transition:opacity .8s}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(15,20,36,.28);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px 16px;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 30px -12px rgba(31,42,68,.35)}
+.sheet.on{transform:none}
+.grab{width:38px;height:5px;border-radius:3px;background:#d8d4d0;margin:0 auto 10px}
+.sheet h3{margin:0;font-size:17px}
+.sheet .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.x{margin-left:auto;background:#f1eeeb;border:0;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;font-size:16px;line-height:1}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.stat{background:var(--paper);border-radius:12px;padding:8px 10px}
+.stat .k{font-size:10.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.stat .v{font-size:18px;font-weight:750;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:11px;color:var(--mute);font-weight:600}
+.tier{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tier.g{background:var(--gs);color:var(--g)} .tier.a{background:var(--as);color:var(--a)} .tier.r{background:var(--rs);color:var(--r)}
+.view .stat{background:#fff;box-shadow:0 3px 10px -8px rgba(31,42,68,.35)}
+.note{font-size:12px;color:var(--ink2);background:var(--paper);border-radius:10px;padding:8px 10px;margin-top:9px}
+.note.credit{background:#eaf5ee;color:#1f6b43}
+.note.off{color:var(--mute)}
+.actions{display:grid;gap:8px}
+
+/* generic cards */
+h2.h{font-size:19px;margin:2px 2px 10px;letter-spacing:-.01em}
+.card{background:#fff;border-radius:16px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 0 rgba(31,42,68,.04),0 4px 14px -10px rgba(31,42,68,.25)}
+.card h4{margin:0 0 6px;font-size:13px;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.muted{color:var(--mute)}
+.small{font-size:12px}
+.big{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* scan */
+.vf{position:relative;height:250px;border-radius:20px;background:linear-gradient(160deg,#27324f,#141b2e);overflow:hidden;display:grid;place-items:center;margin-bottom:12px}
+.vf .corners{position:absolute;inset:40px 70px;border-radius:14px;background:
+ linear-gradient(#fff,#fff) left top/26px 4px no-repeat,linear-gradient(#fff,#fff) left top/4px 26px no-repeat,
+ linear-gradient(#fff,#fff) right top/26px 4px no-repeat,linear-gradient(#fff,#fff) right top/4px 26px no-repeat,
+ linear-gradient(#fff,#fff) left bottom/26px 4px no-repeat,linear-gradient(#fff,#fff) left bottom/4px 26px no-repeat,
+ linear-gradient(#fff,#fff) right bottom/26px 4px no-repeat,linear-gradient(#fff,#fff) right bottom/4px 26px no-repeat}
+.vf .laser{position:absolute;left:78px;right:78px;height:2px;background:var(--rose);box-shadow:0 0 12px 2px rgba(219,90,107,.8);animation:scan 2.2s ease-in-out infinite}
+@keyframes scan{0%,100%{top:50px}50%{top:196px}}
+.vf .qr{opacity:.55}
+.vf .cap{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:#cfd5e4;font-size:11.5px}
+select.inp{width:100%;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font:inherit;color:var(--ink)}
+label.lb{font-size:11.5px;color:var(--mute);display:block;margin:0 0 4px 2px}
+.result{border-radius:16px;padding:12px 14px;margin-top:10px;display:none}
+.result.on{display:block}
+.result.ok{background:#eaf5ee;color:#174d31}
+.result.bad{background:var(--rs);color:#7d2219}
+.result b{font-size:15px;display:block}
+
+/* list rows */
+.lrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:0;border-radius:14px;padding:10px 12px;margin-bottom:7px;box-shadow:0 3px 10px -8px rgba(31,42,68,.35)}
+.lrow .grow{flex:1;min-width:0}
+.lrow .nm{font-weight:650;font-size:13.5px}
+.lrow .cr{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lrow .cr.pos{color:#1f6b43}
+.tx{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line2);font-size:12.5px}
+.tx:first-child{border-top:0}
+.tx .ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 30px;background:var(--paper);font-size:14px}
+.tx .grow{flex:1;min-width:0;line-height:1.3}
+.tx .amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tx .amt.pos{color:#1f6b43}.tx .amt.neg{color:var(--r)}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--rose);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px}
+.pass{border:1.5px dashed #d9b9bd;background:#fff8f8}
+.soon{font-size:10.5px;font-weight:700;background:var(--ink);color:#fff;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:1px}
+
+/* weather */
+.bars{display:flex;gap:6px;align-items:flex-end;height:120px;margin:8px 0 4px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--mute)}
+.bars .col{width:100%;border-radius:6px 6px 3px 3px;background:var(--rain);min-height:3px;transition:height .4s}
+.bars .b.now .col{background:var(--ink)}
+.bars .b.now{color:var(--ink);font-weight:700}
+.linkbtn{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:12px;padding:11px 14px;font-weight:650;background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+
+/* overlays */
+.toast{position:absolute;left:12px;right:12px;top:48px;z-index:40;background:var(--ink);color:#fff;border-radius:14px;padding:10px 12px;font-size:12.5px;display:flex;gap:10px;align-items:center;transform:translateY(-140%);opacity:0;transition:transform .35s,opacity .35s;box-shadow:0 12px 26px -12px rgba(0,0,0,.6)}
+.toast.on{transform:none;opacity:1}
+.toast .tg{font-size:10px;font-weight:800;letter-spacing:.06em;background:var(--rose);border-radius:6px;padding:2px 6px}
+.modal{position:absolute;inset:0;z-index:50;background:rgba(15,20,36,.5);display:none;align-items:center;justify-content:center;padding:22px}
+.modal.on{display:flex}
+.mcard{position:relative;background:#fff;border-radius:22px;overflow:hidden;width:100%;box-shadow:0 20px 50px -20px rgba(0,0,0,.6)}
+.mcard .hero{height:150px;display:grid;place-items:center;position:relative}
+.mcard .bd{padding:14px 16px 16px}
+.mcard .x{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.9)}
+.adtag{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+
+/* ---------- presenter ---------- */
+.pcard{background:#fff;border-radius:18px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 0 rgba(31,42,68,.05),0 10px 30px -22px rgba(31,42,68,.5)}
+.phead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.phead h1{font-size:20px;margin:0;letter-spacing:-.015em}
+.phead .tag{font-size:11px;color:var(--mute)}
+.lab{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:0 0 7px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:#f1edea;border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:8px 6px;font-weight:650;font-size:13px;color:var(--ink2);line-height:1.2}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 2px 6px -2px rgba(31,42,68,.3)}
+.seg button small{display:block;font-weight:500;font-size:10.5px;color:var(--mute)}
+.seg.four{grid-template-columns:repeat(4,1fr)}
+.seg.four button[aria-pressed="true"][data-sig="amber"]{background:#f6b000;color:#3a2a00}
+.seg.four button[aria-pressed="true"][data-sig="red"]{background:#d42a2a;color:#fff}
+.seg.four button[aria-pressed="true"][data-sig="black"]{background:#111;color:#fff}
+.seg.four button[aria-pressed="true"] small{color:inherit;opacity:.85}
+.clock{display:flex;align-items:center;gap:12px}
+.play{width:44px;height:44px;border-radius:50%;border:0;background:var(--ink);color:#fff;display:grid;place-items:center;flex:0 0 44px}
+.time{font:800 26px var(--mono);letter-spacing:-.02em;min-width:88px}
+input[type=range]{flex:1;accent-color:var(--rose);min-width:0}
+.ticks{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--mute);margin:2px 0 0 144px}
+.counters{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.ctr{background:var(--paper);border-radius:12px;padding:9px 10px}
+.ctr .k{font-size:10.5px;color:var(--mute);line-height:1.25;min-height:26px}
+.ctr .v{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.ctr.hot{background:var(--rs)}
+.ctr.hot .v{color:var(--r)}
+.narr{font-size:14.5px;line-height:1.55;min-height:92px}
+.narr b{color:var(--ink)}
+.narr .when{font:700 12px var(--mono);color:var(--rose);display:block;margin-bottom:3px}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.cmp th,table.cmp td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line2)}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left}
+table.cmp th{font-size:11px;color:var(--mute);font-weight:700;vertical-align:bottom}
+table.cmp .act{background:#fdf1f2}
+table.cmp th.act{color:var(--rose)}
+.fine{font-size:11.5px;color:var(--mute);margin-top:8px}
+.selftest{font:11px var(--mono);color:var(--g)}
+.selftest.bad{color:var(--r)}
+footer{text-align:center;font-size:11.5px;color:var(--mute);padding:6px 16px 26px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:960px){
+  .wrap{flex-direction:column;align-items:center;gap:18px;padding:14px 10px}
+  .panel{max-width:600px;width:100%;flex:none}
+}
+@media (max-width:520px){
+  .counters{grid-template-columns:repeat(2,1fr)}
+  .counters .ctr:first-child{grid-column:span 2}
+  .ticks{margin-left:0}
+  .clock{flex-wrap:wrap}
+  .pcard{padding:14px}
+  .seg button{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<!-- ================= PHONE ================= -->
+<div class="stage">
+<div class="phone" role="region" aria-label="RainBorrow app mock-up">
+<div class="screen" id="screen">
+  <div class="status"><span id="stTime">14:00</span><span class="notch" aria-hidden="true"></span><span class="sig" aria-hidden="true">
+    <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="5" width="3" height="6" rx="1" fill="currentColor"/><rect x="9" y="2.5" width="3" height="8.5" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg>
+    <svg width="24" height="11" viewBox="0 0 24 11"><rect x=".5" y=".5" width="20" height="10" rx="3" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="14" height="7" rx="1.5" fill="currentColor"/><rect x="21.5" y="3.5" width="1.8" height="4" rx=".9" fill="currentColor" opacity=".5"/></svg></span></div>
+  <div class="appbar">
+    <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#DB5A6B"/><g transform="translate(11.728 15.556) scale(0.76543)"><path d="M12 52 A38 38 0 0 1 88 52 A12.667 7 0 0 0 62.667 52 A12.667 7 0 0 0 37.333 52 A12.667 7 0 0 0 12 52 Z" fill="#FFFFFF"/><g fill="none" stroke="#1F2A44" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M50 15 V8" stroke="#FFFFFF"/><path d="M50 46 V79 A9 9 0 0 1 32 79 V68"/><path d="M25 74.5 L32 67 L39 74.5"/></g></g></svg>
+    <span class="ttl" id="appTitle">RainBorrow</span>
+    <span class="sub" id="appSub">Hang Hau · HKUST</span>
+  </div>
+
+  <div class="content" id="content">
+    <!-- MAP -->
+    <section class="view map on" id="v-map" aria-label="Map">
+      <div class="mapbox">
+        <div class="mapinner" id="mapinner">
+          <svg class="base" viewBox="0 0 390 612" aria-hidden="true">
+            <defs>
+              <pattern id="rainHatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(18)"><line x1="0" y1="0" x2="0" y2="6" stroke="#4f7fa8" stroke-width="1.4" opacity=".55"/></pattern>
+              <radialGradient id="cell" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3f6f9a" stop-opacity=".55"/><stop offset=".6" stop-color="#5d8db8" stop-opacity=".32"/><stop offset="1" stop-color="#7BA3C4" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="390" height="612" fill="#F3EEE8"/>
+            <!-- hills -->
+            <path d="M150 60 C190 40 230 70 225 120 C220 160 175 175 160 150 C140 120 125 80 150 60Z" fill="#e3e9dc"/>
+            <path d="M140 200 C170 185 205 200 200 240 C196 275 160 290 145 268 C128 245 120 212 140 200Z" fill="#e3e9dc"/>
+            <path d="M165 470 C190 450 215 470 205 500 C196 525 165 530 158 510Z" fill="#e3e9dc"/>
+            <!-- Port Shelter (east) and Junk Bay (south-west) -->
+            <path d="M345 0 L390 0 L390 612 L360 612 C352 560 372 520 350 480 C332 448 342 410 338 380 C334 340 350 300 344 262 C338 220 352 180 340 140 C330 100 350 50 345 0Z" fill="#cfe0ec"/>
+            <path d="M0 505 C40 492 80 500 110 520 C140 540 160 575 170 612 L0 612Z" fill="#cfe0ec"/>
+            <!-- HKUST campus -->
+            <path d="M212 188 C250 176 300 180 326 200 C338 240 332 300 334 350 C336 400 330 440 312 468 C282 478 240 478 220 462 C206 420 204 360 206 300 C207 260 204 214 212 188Z" fill="#fbe9eb" stroke="#e7b9bf" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <!-- town blocks -->
+            <g fill="#e9e3dc">
+              <rect x="18" y="40" width="34" height="46" rx="4"/><rect x="92" y="40" width="40" height="36" rx="4"/>
+              <rect x="18" y="200" width="34" height="56" rx="4"/><rect x="18" y="290" width="36" height="50" rx="4"/>
+              <rect x="118" y="360" width="40" height="44" rx="4"/><rect x="18" y="380" width="40" height="60" rx="4"/>
+              <rect x="94" y="180" width="30" height="40" rx="4"/>
+            </g>
+            <!-- roads -->
+            <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M66 0 C70 120 76 230 82 320 C86 390 84 450 80 500" stroke-width="11"/>
+              <path d="M0 150 C60 146 110 140 150 128 C185 118 205 150 230 205" stroke-width="9"/>
+              <path d="M82 330 C120 320 160 300 190 270 C210 250 222 228 232 208" stroke-width="9"/>
+              <path d="M232 208 C250 250 262 300 255 350 C250 400 245 430 242 450" stroke-width="7"/>
+              <path d="M255 300 C280 305 300 330 305 385" stroke-width="5"/>
+              <path d="M0 330 L82 330" stroke-width="7"/>
+            </g>
+            <g fill="none" stroke="#ddd3c9" stroke-width="1" stroke-linecap="round">
+              <path d="M66 0 C70 120 76 230 82 320 C86 390 84 450 80 500"/>
+            </g>
+            <!-- MTR line -->
+            <path d="M40 0 C48 90 58 150 70 160 C84 200 92 280 98 330 C104 380 104 430 100 470" fill="none" stroke="#8a6cb0" stroke-width="3" stroke-dasharray="7 5" opacity=".7"/>
+            <g font-family="system-ui,Segoe UI,Arial,sans-serif" fill="#8b8f9c" font-size="9.5">
+              <text x="120" y="112" transform="rotate(-10 120 112)">Clear Water Bay Rd</text>
+              <text x="140" y="318" transform="rotate(-30 140 318)">University Rd</text>
+              <text x="360" y="300" transform="rotate(90 360 300)" fill="#6f93b3" font-style="italic" font-size="11">Port Shelter</text>
+              <text x="20" y="560" fill="#6f93b3" font-style="italic" font-size="11">Junk Bay</text>
+              <text x="92" y="176" font-weight="700" font-size="10.5" fill="#7c8190">TSEUNG KWAN O</text>
+              <text x="14" y="365" font-weight="700" font-size="10.5" fill="#7c8190">HANG HAU</text>
+              <text x="232" y="495" font-weight="800" font-size="11" fill="#c77b86">HKUST</text>
+              <text x="106" y="455" fill="#8a6cb0" font-size="9">MTR Tseung Kwan O line</text>
+            </g>
+            <!-- rain overlay (weather mode) -->
+            <g class="rainlayer" id="rainLayer" opacity="0">
+              <ellipse id="cellA" cx="140" cy="260" rx="190" ry="150" fill="url(#cell)"/>
+              <ellipse id="cellB" cx="260" cy="330" rx="150" ry="170" fill="url(#cell)"/>
+              <ellipse cx="200" cy="300" rx="210" ry="240" fill="url(#rainHatch)" opacity=".55" id="hatch"/>
+            </g>
+          </svg>
+          <div id="pins"></div>
+          <span class="me" style="left:40%;top:48%" title="You are here" aria-label="Your location" role="img"></span>
+        </div>
+      </div>
+      <div class="banner" id="wxBanner" role="status"></div>
+      <div class="mapctl">
+        <button class="chip" id="wxMode" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1.6-9.7A6 6 0 0 1 20 10a4 4 0 0 1-1 7.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9 20l1-2M13 21l1-2M17 20l1-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Weather mode</button>
+      </div>
+      <div class="legend" id="legend" aria-label="Tier legend"><span><i class="dot" style="background:var(--g)"></i>plenty</span><span><i class="dot" style="background:var(--a)"></i>tight</span><span><i class="dot" style="background:var(--r)"></i>short</span></div>
+      <div class="rental" id="rental" role="status">
+        <svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true"><path d="M12 52 A38 38 0 0 1 88 52 A12.667 7 0 0 0 62.667 52 A12.667 7 0 0 0 37.333 52 A12.667 7 0 0 0 12 52 Z" fill="#DB5A6B"/><g fill="none" stroke="#1F2A44" stroke-width="7" stroke-linecap="round"><path d="M50 46 V79 A9 9 0 0 1 32 79 V68"/></g></svg>
+        <div class="grow" id="rentalTxt"></div>
+        <button class="btn sm ink" id="rentalReturn">Return</button>
+      </div>
+    </section>
+
+    <!-- WEATHER -->
+    <section class="view" id="v-weather" aria-label="Weather">
+      <h2 class="h">Weather</h2>
+      <div class="card">
+        <h4>HKO nowcast · Hang Hau</h4>
+        <div id="wxNow" class="small"></div>
+        <div class="bars" id="wxBars" aria-label="Rainfall forecast by hour"></div>
+        <div class="small muted">mm per hour. Signals: Amber 30 · Red 50 · Black 70 mm/h. Mock data shaped like the HKO nowcast.</div>
+      </div>
+      <div class="card">
+        <h4>Weather mode</h4>
+        <p class="small" style="margin:0 0 10px">Lights up the rain areas on the map, so you can see which racks the shower is heading for.</p>
+        <button class="btn block ink" id="wxGo">Show rain on the map</button>
+      </div>
+      <a class="linkbtn" href="https://www.hko.gov.hk/en/index.html" target="_blank" rel="noopener noreferrer">Weather news on HKO ↗</a>
+      <p class="small muted" style="margin:8px 4px">Opens the Hong Kong Observatory website (needs internet). Everything else in this demo works offline.</p>
+    </section>
+
+    <!-- SCAN -->
+    <section class="view" id="v-scan" aria-label="Scan to rent">
+      <h2 class="h" id="scanH">Scan to rent</h2>
+      <div class="vf" aria-hidden="true">
+        <svg class="qr" width="120" height="120" viewBox="0 0 21 21"><g fill="#fff"><path d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zm1 1v5h5V1zm1 1h3v3h-3zM0 14h7v7H0zm1 1v5h5v-5zm1 1h3v3H2z"/><path d="M9 0h1v2H9zM11 1h2v1h-2zM8 3h2v2H8zM11 4h1v3h-1zM9 8h3v1H9zM13 8h2v2h-2zM0 9h2v1H0zM3 8h2v2H3zM16 9h3v1h-3zM19 11h2v1h-2zM8 11h2v2H8zM12 11h1v3h-1zM14 12h3v1h-3zM10 15h2v2h-2zM14 15h1v4h-1zM16 16h2v1h-2zM18 18h3v1h-3zM9 19h3v2H9zM16 20h1v1h-1z"/></g></svg>
+        <div class="corners"></div><div class="laser"></div>
+        <div class="cap">Point at the QR on the rack's canopy</div>
+      </div>
+      <label class="lb" for="scanStation">Rack you are standing at</label>
+      <select class="inp" id="scanStation"></select>
+      <div style="height:10px"></div>
+      <button class="btn block" id="scanBtn">Simulate scan</button>
+      <div class="result" id="scanRes" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- RETURN -->
+    <section class="view" id="v-return" aria-label="Return an umbrella">
+      <h2 class="h">Return umbrella <span id="retNo" class="muted small"></span></h2>
+      <p class="small muted" style="margin:-4px 2px 10px" id="retIntro">Racks that are running short pay you a credit for bringing your umbrella there.</p>
+      <div id="retList"></div>
+      <div class="result" id="retRes" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- WALLET -->
+    <section class="view" id="v-wallet" aria-label="Wallet and profile">
+      <div class="card" style="display:flex;gap:12px;align-items:center">
+        <div class="avatar" aria-hidden="true">AC</div>
+        <div><b>Alex Chan</b><div class="small muted">Demo user · HKUST student · since Sep 2026</div></div>
+      </div>
+      <div class="card">
+        <h4>Credit balance</h4>
+        <div class="big" id="bal">HK$0.00</div>
+        <div class="small muted">Credit pays late fees, reserves and RainPass. Earned by returning to racks that are running short.</div>
+      </div>
+      <div class="card pass">
+        <h4>RainPass <span class="soon">Coming soon</span></h4>
+        <div style="display:flex;align-items:baseline;gap:6px"><span class="big" style="font-size:22px">HK$20</span><span class="muted small">/ month</span></div>
+        <div class="small">Free reserves, 48 h borrowing, no late fees. Credits count toward it.</div>
+        <button class="btn sm ghost" style="margin-top:8px" disabled>Join the waitlist</button>
+      </div>
+      <div class="card">
+        <h4>Transaction history</h4>
+        <div id="txList"></div>
+      </div>
+    </section>
+
+    <!-- SPONSOR -->
+    <section class="view" id="v-sponsor" aria-label="Sponsor view">
+      <h2 class="h">Sponsor dashboard</h2>
+      <div class="card" style="background:linear-gradient(135deg,#1F2A44,#34446b);color:#fff">
+        <div class="adtag" style="color:#c9d2e8">Canopy title sponsor · 2-year</div>
+        <div style="font-size:20px;font-weight:800;margin-top:2px">Brightwave Tea</div>
+        <div class="small" style="color:#d6dcec">Logo on every canopy in the network; rain-moment card on each unlock.</div>
+      </div>
+      <div class="stats" style="margin-top:0">
+        <div class="stat"><div class="k">Counted borrowings</div><div class="v" id="spB">0</div></div>
+        <div class="stat"><div class="k">Rain-moment views</div><div class="v" id="spI">0</div></div>
+        <div class="stat"><div class="k">Lost (turned away)</div><div class="v" id="spL" style="color:var(--r)">0</div></div>
+      </div>
+      <div class="card">
+        <h4>Rainstorm takeover</h4>
+        <div id="spT" class="small"></div>
+      </div>
+      <div class="card" style="background:#fff8f8">
+        <b>Sponsors pay for counted borrowings, so a full rack is ad revenue.</b>
+        <div class="small muted" style="margin-top:4px">Every borrower turned away at an empty rack is an impression nobody pays for. That is why pricing that keeps exits stocked matters to the sponsor side too.</div>
+      </div>
+    </section>
+
+    <!-- station bottom sheet -->
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="shName">
+      <div class="grab" aria-hidden="true"></div>
+      <div class="row"><h3 id="shName">Station</h3><button class="x" id="shClose" aria-label="Close station details">×</button></div>
+      <div class="row" style="margin-top:4px"><span id="shTier" class="tier g">plenty</span><span class="small muted" id="shMeta"></span></div>
+      <div class="stats">
+        <div class="stat"><div class="k">Umbrellas left</div><div class="v" id="shLeft">0</div></div>
+        <div class="stat"><div class="k">Next 2 h demand</div><div class="v" id="shDem">0</div></div>
+        <div class="stat"><div class="k">Pressure</div><div class="v" id="shP">0</div></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="shBorrow">Borrow — free 24 h</button>
+        <button class="btn ghost" id="shReserve">Reserve 15 min — HK$3</button>
+      </div>
+      <div class="note" id="shNote"></div>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="App navigation">
+    <button data-go="map" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9.5" r="2.5" fill="currentColor"/></svg>Map</button>
+    <button data-go="weather"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17a5 5 0 1 1 1.6-9.7A6 6 0 0 1 20 9a4 4 0 0 1-1 7.9H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Weather</button>
+    <button data-go="scan" class="scanbtn" aria-label="Scan to rent"><span class="c"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>Scan</button>
+    <button data-go="wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M16 14.5h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Wallet</button>
+    <button data-go="sponsor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l6 4V6L7 10H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Sponsor</button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span class="tg">OPS</span><span id="toastTxt"></span></div>
+
+  <!-- rain-moment sponsor card -->
+  <div class="modal" id="mRain" role="dialog" aria-modal="true" aria-labelledby="mRainT">
+    <div class="mcard">
+      <div class="hero" style="background:linear-gradient(160deg,#f3c46b,#e98a53)">
+        <svg width="120" height="110" viewBox="0 0 120 110" aria-hidden="true"><path d="M30 40h52v44a14 14 0 0 1-14 14H44a14 14 0 0 1-14-14z" fill="#fff" opacity=".95"/><path d="M82 50h8a10 10 0 0 1 0 20h-8" fill="none" stroke="#fff" stroke-width="6"/><path d="M44 30c0-8 8-8 8-16M58 30c0-8 8-8 8-16" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/><circle cx="56" cy="66" r="10" fill="#f3c46b"/></svg>
+        <button class="x" id="mRainX" aria-label="Close sponsor card">×</button>
+      </div>
+      <div class="bd">
+        <div class="adtag" id="mRainTag">Rain moment · sponsored</div>
+        <div id="mRainT" style="font-size:18px;font-weight:800;margin:3px 0 4px">Caught in the rain? Warm up on us.</div>
+        <div class="small">Brightwave Tea: hot lemon tea 2-for-1 at the LG7 kiosk until 20:00. Show this card.</div>
+        <button class="btn block" style="margin-top:12px" id="mRainOk">Save offer</button>
+      </div>
+    </div>
+  </div>
+  <!-- rainstorm takeover splash -->
+  <div class="modal" id="mStorm" role="dialog" aria-modal="true" aria-labelledby="mStormT">
+    <div class="mcard">
+      <div class="hero" style="background:linear-gradient(160deg,#1F2A44,#3b4f80);color:#fff">
+        <svg width="140" height="110" viewBox="0 0 140 110" aria-hidden="true"><path d="M40 62a20 20 0 1 1 6-39 26 26 0 0 1 50 10 17 17 0 0 1-4 33H40z" fill="#fff" opacity=".92"/><path d="M52 76l-6 14M72 76l-6 14M92 76l-6 14" stroke="#7BA3C4" stroke-width="5" stroke-linecap="round"/></svg>
+        <button class="x" id="mStormX" aria-label="Close takeover splash">×</button>
+      </div>
+      <div class="bd">
+        <div class="adtag" id="mStormTag">Rainstorm takeover · sponsored</div>
+        <div id="mStormT" style="font-size:18px;font-weight:800;margin:3px 0 4px">Stay dry. Nimbus Noodle Bar has you covered.</div>
+        <div class="small">Borrowing stays free for 24 h, credits are doubled and nothing costs more while the signal is up. Brought to you by Nimbus Noodle Bar (fictional).</div>
+        <button class="btn block ink" style="margin-top:12px" id="mStormOk">Got it</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================= PRESENTER ================= -->
+<aside class="panel" aria-label="Presenter panel">
+  <div class="pcard">
+    <div class="phead">
+      <svg width="40" height="40" viewBox="0 0 93 93" aria-hidden="true"><g transform="translate(-3.5 1.5)"><path d="M12 52 A38 38 0 0 1 88 52 A12.667 7 0 0 0 62.667 52 A12.667 7 0 0 0 37.333 52 A12.667 7 0 0 0 12 52 Z" fill="#DB5A6B"/><g fill="none" stroke="#1F2A44" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M50 15 V8" stroke="#DB5A6B"/><path d="M50 46 V79 A9 9 0 0 1 32 79 V68"/><path d="M25 74.5 L32 67 L39 74.5"/></g></g></svg>
+      <div><h1>RainBorrow · rain-day demo</h1><div class="tag">Presenter panel · play the afternoon and switch the policy to compare</div></div>
+    </div>
+    <div class="lab" id="polLab">Policy</div>
+    <div class="seg" id="pol" role="group" aria-labelledby="polLab">
+      <button data-pol="fixed" aria-pressed="false">Fixed price<small>no data</small></button>
+      <button data-pol="weather" aria-pressed="false">+ Weather data<small>HKO crate</small></button>
+      <button data-pol="dynamic" aria-pressed="true">+ Dynamic pricing<small>credits + reserve</small></button>
+    </div>
+    <div style="height:14px"></div>
+    <div class="lab" id="clkLab">Clock · one step = one hour</div>
+    <div class="clock">
+      <button class="play" id="play" aria-label="Play"><svg id="playIc" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="currentColor"/></svg></button>
+      <span class="time" id="pTime" aria-live="polite">14:00</span>
+      <input type="range" id="scrub" min="14" max="21" step="1" value="14" aria-labelledby="clkLab">
+    </div>
+    <div class="ticks" aria-hidden="true"><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span></div>
+  </div>
+
+  <div class="pcard">
+    <div class="lab">Whole network, day so far (00:00 to clock)</div>
+    <div class="counters">
+      <div class="ctr"><div class="k">Borrowings served</div><div class="v" id="cS">0</div></div>
+      <div class="ctr hot"><div class="k">Turned away</div><div class="v" id="cL">0</div></div>
+      <div class="ctr"><div class="k">Credits paid</div><div class="v" id="cC">HK$0</div></div>
+      <div class="ctr"><div class="k">Reserve fees</div><div class="v" id="cR">HK$0</div></div>
+      <div class="ctr"><div class="k">Crate runs</div><div class="v" id="cX">0</div></div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="lab">What you're seeing</div>
+    <div class="narr" id="narr" aria-live="polite"></div>
+  </div>
+
+  <div class="pcard">
+    <div class="lab" id="sigLab">HKO rainstorm signal</div>
+    <div class="seg four" id="sig" role="group" aria-labelledby="sigLab">
+      <button data-sig="none" aria-pressed="true">None<small>&nbsp;</small></button>
+      <button data-sig="amber" aria-pressed="false">Amber<small>30 mm/h</small></button>
+      <button data-sig="red" aria-pressed="false">Red<small>50 mm/h</small></button>
+      <button data-sig="black" aria-pressed="false">Black<small>70 mm/h</small></button>
+    </div>
+    <div class="fine">While a signal is up: reserve off, return credits doubled, late fees paused, and the app shows “No price rises during a rainstorm signal”. The takeover sponsor buys the day for HK$1,500.</div>
+  </div>
+
+  <div class="pcard">
+    <div class="lab">Borrowers turned away over the rain day, by policy (model)</div>
+    <table class="cmp" id="cmp"></table>
+    <div class="fine">Pricing engine: pressure = expected borrowings in the next 2 h ÷ umbrellas on the rack. Green under 0.7, amber 0.7 to 1.0, red over 1.0 or empty. Walk-up borrowing is free for 24 h in every tier. Credits: amber HK$1, red HK$2. Reserve (15 min): amber HK$2, red HK$3. Rack 30 slots; the crate adds 15 from 16:00 to 18:59. <span class="selftest" id="selftest">self-test …</span></div>
+  </div>
+</aside>
+</div>
+<footer>Mock-up for TEMG3950 Group 1 · fictional sponsors · numbers from the RainBorrow dynamic-pricing model (29 Sep 2026)</footer>
+
+<script>
+(function(){
+"use strict";
+/* ================= MODEL (mirrors day() in build_dynamic_pricing.py) ================= */
+var PROFILE=[0,0,0,0,0,0,1,5,9,5,3,3,4,3,3,3,4,6,9,8,5,4,3,1];
+var ONSET_H=17, ONSET_SHARE=0.35, IMB=0.30, LAG=10, CAP=30, CRATE=15, RESP=0.15;
+var P=(function(){var t=PROFILE.reduce(function(a,b){return a+b;},0);var p=PROFILE.map(function(w){return w/t*(1-ONSET_SHARE);});p[ONSET_H]+=ONSET_SHARE;return p;})();
+function day(B,crate,resp){
+  crate=crate||0; resp=resp||0;
+  var ret=[],h;
+  for(h=0;h<24;h++) ret.push((1-IMB)*B*P[((h-LAG)%24+24)%24]);
+  ret[ONSET_H-1]+=B*IMB*resp/2; ret[ONSET_H-2]+=B*IMB*resp/2;
+  ret[3]+=B*IMB*(1-resp);                         // overnight rebalancing round
+  var s=0,lost=0,trace,dem,served,lostH,full;
+  for(var rep=0;rep<3;rep++){                     // three passes, keep the last (steady state)
+    lost=0;full=0;trace=[];dem=[];served=[];lostH=[];
+    for(h=0;h<24;h++){
+      var cap=CAP+((h>=ONSET_H-1&&h<=ONSET_H+1)?crate:0);
+      if(crate&&h===ONSET_H-1) s+=crate;           // crate arrives full from quiet stations
+      s+=ret[h];
+      if(s>cap){full+=s-cap;s=cap;}
+      var d=B*P[h], sv=Math.min(s,d);
+      lost+=d-sv; s-=sv;
+      if(crate&&h===ONSET_H+1&&s>CAP) s=CAP;       // crate leaves
+      trace.push(s);dem.push(d);served.push(sv);lostH.push(d-sv);
+    }
+  }
+  return {lost:lost/B,full:full,trace:trace,dem:dem,served:served,lostH:lostH,ret:ret};
+}
+var POL={fixed:{c:0,r:0,name:"Fixed price"},weather:{c:CRATE,r:0,name:"+ Weather data"},dynamic:{c:CRATE,r:RESP,name:"+ Dynamic pricing"}};
+
+/* self-test against the page's published numbers */
+var selfOK=true;
+(function(){
+  var exp={15:[0,0,0],50:[19,0,0],75:[39,19,14]};
+  Object.keys(exp).forEach(function(B){
+    var got=["fixed","weather","dynamic"].map(function(k){return Math.round(day(+B,POL[k].c,POL[k].r).lost*100);});
+    var ok=got.join()===exp[B].join();
+    console.assert(ok,"RainBorrow self-test B="+B+" expected "+exp[B]+" got "+got);
+    if(!ok) selfOK=false;
+    var dsum=day(+B).dem.reduce(function(a,b){return a+b;},0);
+    if(Math.abs(dsum-B)>1e-6) selfOK=false;
+  });
+  var el=document.getElementById("selftest");
+  el.textContent=selfOK?"self-test OK (B=50: 19/0/0%, B=75: 39/19/14%, B=15: 0/0/0%)":"self-test FAILED — see console";
+  if(!selfOK) el.classList.add("bad");
+  console.log(selfOK?"RainBorrow model self-test OK":"RainBorrow model self-test FAILED");
+})();
+
+/* ================= STATIONS ================= */
+var ST=[
+  {id:"hh", name:"Hang Hau MTR Exit B1", short:"Hang Hau B1", B:75, exit:true, x:100, y:330, note:"busiest exit"},
+  {id:"ng", name:"HKUST North Gate bus stop", short:"North Gate", B:50, exit:true, x:238, y:210, note:"exit"},
+  {id:"lg7",name:"LG7 / Atrium", short:"LG7", B:12, x:262, y:318},
+  {id:"ac", name:"Academic Concourse", short:"Concourse", B:10, x:296, y:262},
+  {id:"ug1",name:"UG Hall 1", short:"UG Hall 1", B:6, x:302, y:396},
+  {id:"sb", name:"South Bus Stop", short:"South Bus", B:8, x:240, y:448},
+  {id:"tko",name:"Tseung Kwan O Plaza", short:"TKO Plaza", B:9, x:72, y:150}
+];
+var RUNS={};
+Object.keys(POL).forEach(function(k){
+  RUNS[k]=ST.map(function(s){
+    var r=s.exit?day(s.B,POL[k].c,POL[k].r):day(s.B,0,0);
+    var mx=Math.max.apply(null,r.trace),mn=Math.min.apply(null,r.trace);
+    // Display offset: day() starts every rack at s=0, so a quiet rack that never loses a borrower or hits the 30 cap has an arbitrary level (only its flows are real); lift it so it sits ~70-80% full like a real parked rack. Exits hit the cap, so their level is real and stays as modelled.
+    r.off=(!s.exit&&r.lost<1e-9&&mx<CAP)?Math.max(0,Math.min(CAP-mx,24-mn)):0;
+    return r;
+  });
+});
+
+/* ================= STATE ================= */
+var S={pol:"dynamic",h:14,sig:"none",wx:false,sel:null,view:"map",rental:null,bal:0,umb:427,res:null,
+  tx:[{ic:"↩",t:"Returned at LG7 / Atrium",d:"28 Sep · 09:12",a:0},{ic:"☂",t:"Borrowed at South Bus Stop",d:"27 Sep · 18:40 · free 24 h",a:0}],
+  playing:false,timer:null,lastToastH:null};
+
+function R(k){return RUNS[S.pol][k];}
+function stock(k,h){return R(k).trace[h]+R(k).off;}  // displayed stock: pins, sheet, pressure and tiers all use it
+function left(k,h){return Math.max(0,Math.round(stock(k,h)));}
+function expNext(k,h){var d=R(k).dem;return d[(h+1)%24]+d[(h+2)%24];}
+function pressure(k,h){var s=stock(k,h);return s<0.5?Infinity:expNext(k,h)/s;}
+function tierOf(k,h){var p=pressure(k,h);if(left(k,h)===0||p>1.0)return"r";if(p>=0.7)return"a";return"g";}
+var TN={g:"plenty",a:"tight",r:"short"};
+var TC={g:"var(--g)",a:"var(--a)",r:"var(--r)"};
+var TCH={g:"#2E8B57",a:"#B7791F",r:"#C0392B"};
+function sigOn(){return S.sig!=="none";}
+function dyn(){return S.pol==="dynamic";}
+function crateOn(){return S.pol!=="fixed";}
+function creditFor(t){if(!dyn()||t==="g")return 0;var c=t==="r"?2:1;return sigOn()?c*2:c;}
+function reserveFor(t){if(!dyn()||sigOn()||t==="g")return 0;return t==="r"?3:2;}
+function crateHere(k,h){return crateOn()&&ST[k].exit&&h>=16&&h<=17;}  // staged at end of 16:00 and 17:00; leaves end of 18:00
+function hh(h){return (h<10?"0":"")+h+":00";}
+function money(v,dec){return "HK$"+(dec?v.toFixed(2):Math.round(v).toLocaleString("en-US"));}
+function fmtP(p){return p===Infinity?"empty":p.toFixed(2);}
+
+/* network counters up to and including hour h */
+function counters(h){
+  var served=0,lost=0,credits=0,fees=0,crates=0;
+  ST.forEach(function(s,k){
+    var r=R(k);
+    for(var i=0;i<=h;i++){served+=r.served[i];lost+=r.lostH[i];}
+    if(dyn()&&s.exit){
+      [15,16].forEach(function(i){ if(i<=h){ var n=s.B*IMB*RESP/2; var t=tierOf(k,i); var c=(t==="r"?2:1)*(sigOn()?2:1); credits+=n*c; } });
+      if(!sigOn()) for(var j=1;j<=h;j++){ var t2=tierOf(k,j-1); if(t2!=="g") fees+=0.05*r.served[j]*(t2==="r"?3:2); }
+    }
+  });
+  if(crateOn()&&h>=16) crates=2;
+  return {served:served,lost:lost,credits:credits,fees:fees,crates:crates};
+}
+function lostAt(h){var n=0,who=[];ST.forEach(function(s,k){var l=R(k).lostH[h];n+=l;if(l>=0.5)who.push(s.short+" "+Math.round(l));});return {n:n,who:who};}
+
+/* ================= PINS ================= */
+var pinsEl=document.getElementById("pins");
+ST.forEach(function(s,k){
+  var b=document.createElement("button");
+  b.className="pin";b.id="pin-"+s.id;
+  b.style.left=(s.x/390*100)+"%";b.style.top=(s.y/612*100)+"%";
+  b.innerHTML='<svg viewBox="-20 -48 40 48" aria-hidden="true"><path class="body" d="M0 0 C-4 -8 -17 -16 -17 -29 A17 17 0 1 1 17 -29 C17 -16 4 -8 0 0Z" fill="#2E8B57" stroke="#fff" stroke-width="2"/><circle cx="0" cy="-29" r="12" fill="#fff"/><text class="num" x="0" y="-24.5" text-anchor="middle" fill="#2E8B57">0</text></svg><span class="crate" hidden>+15</span>';
+  b.addEventListener("click",function(){openSheet(k);});
+  pinsEl.appendChild(b);
+});
+var lastLeft={};
+function renderPins(){
+  ST.forEach(function(s,k){
+    var b=document.getElementById("pin-"+s.id),t=tierOf(k,S.h),n=left(k,S.h);
+    b.querySelector(".body").setAttribute("fill",TCH[t]);
+    var tx=b.querySelector(".num");tx.textContent=n;tx.setAttribute("fill",TCH[t]);
+    b.querySelector(".crate").hidden=!crateHere(k,S.h);
+    b.classList.toggle("sel",S.sel===k);
+    b.setAttribute("aria-label",s.name+": "+n+" umbrellas left, "+TN[t]);
+    if(lastLeft[s.id]!==undefined&&lastLeft[s.id]!==n){b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump");}
+    lastLeft[s.id]=n;
+  });
+}
+
+/* ================= WEATHER ================= */
+var RAINMM=[0,0,1,28,14,5,2,1]; // 14..21
+function rainMM(h){var v=RAINMM[h-14]||0;if(h===17&&sigOn())v={amber:38,red:58,black:78}[S.sig];if(h===18&&sigOn())v={amber:22,red:34,black:52}[S.sig];return v;}
+function renderWeather(){
+  var bn=document.getElementById("wxBanner"),h=S.h,html,cls="banner";
+  var sigName={amber:"Amber",red:"Red",black:"Black"}[S.sig];
+  if(sigOn()){cls+=" storm";html='<span class="ic">⚠</span><span><b>'+sigName+' rainstorm signal in force</b>No price rises during a rainstorm signal · return credits doubled · late fees paused</span>';}
+  else if(h<15){html='<span class="ic">⛅</span><span><b>Cloudy, 27°C</b>HKO: isolated showers later. Borrowing is free for 24 h.</span>';}
+  else if(h<17){cls+=" warn";html='<span class="ic">🌧</span><span><b>HKO nowcast: heavy shower from 17:00</b>Racks near the MTR and North Gate will run short. Grab one early.</span>';}
+  else if(h<19){cls+=" warn";html='<span class="ic">🌧</span><span><b>Heavy rain now · '+rainMM(h)+' mm/h</b>'+(dyn()?'Returning? Racks in red pay you a credit.':'Check the map for racks with umbrellas left.')+'</span>';}
+  else {html='<span class="ic">🌦</span><span><b>Rain easing</b>HKO: light rain until late evening.</span>';}
+  bn.className=cls;bn.innerHTML=html;
+  // rain overlay
+  var o=0,cx=140;
+  if(h>=15&&h<17){o=h===15?0.45:0.7;cx=h===15?-10:60;}
+  else if(h>=17&&h<=18){o=1;cx=140;} else if(h>=19){o=0.45;cx=240;} else o=0.15;
+  if(sigOn()&&h>=15)o=Math.min(1,o+0.2);
+  document.getElementById("rainLayer").setAttribute("opacity",S.wx?o:0);
+  document.getElementById("cellA").setAttribute("cx",cx);
+  document.getElementById("cellB").setAttribute("cx",cx+120);
+  // weather view
+  var bars="";for(var i=14;i<=21;i++){var v=rainMM(i);bars+='<div class="b'+(i===h?' now':'')+'"><span>'+v+'</span><div class="col" style="height:'+Math.max(3,v*1.2)+'px"></div><span>'+i+'</span></div>';}
+  document.getElementById("wxBars").innerHTML=bars;
+  document.getElementById("wxNow").innerHTML=h<15?"No rain in the next 2 hours. Shower cells building over Sai Kung.":h<17?"<b>Rain from 17:00</b>, heavy at times. Expect "+rainMM(17)+" mm/h in the first hour.":h<19?"<b>Heavy rain now</b> over Hang Hau and Clear Water Bay.":"Rain easing; light rain until late evening.";
+  var wm=document.getElementById("wxMode");wm.setAttribute("aria-pressed",S.wx?"true":"false");
+}
+
+/* ================= SHEET ================= */
+var sheet=document.getElementById("sheet"),scrim=document.getElementById("scrim"),lastFocus=null;
+function openSheet(k){S.sel=k;lastFocus=document.activeElement;renderSheet();sheet.classList.add("on");scrim.classList.add("on");renderPins();document.getElementById("shClose").focus();}
+function closeSheet(){if(S.sel===null)return;S.sel=null;sheet.classList.remove("on");scrim.classList.remove("on");renderPins();if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+function renderSheet(){
+  if(S.sel===null)return;var k=S.sel,s=ST[k],h=S.h,t=tierOf(k,h),n=left(k,h),p=pressure(k,h);
+  document.getElementById("shName").textContent=s.name;
+  var tc=document.getElementById("shTier");tc.className="tier "+t;tc.textContent=({g:"Green · plenty",a:"Amber · tight",r:"Red · short"})[t];
+  document.getElementById("shMeta").textContent="~"+s.B+" borrowings on a rain day"+(s.note?" · "+s.note:"");
+  var capTxt=crateHere(k,h)?'<small>/ 30 +15 crate</small>':'<small>/ 30</small>';
+  document.getElementById("shLeft").innerHTML=n+" "+capTxt;
+  document.getElementById("shDem").innerHTML=Math.round(expNext(k,h))+" <small>people</small>";
+  document.getElementById("shP").innerHTML=fmtP(p);
+  var bb=document.getElementById("shBorrow"),rb=document.getElementById("shReserve"),note=document.getElementById("shNote");
+  var held=S.res&&S.res.k===k;
+  bb.disabled=(n===0&&!held);bb.textContent=held?"Borrow your held umbrella — free 24 h":(n===0?"Rack empty — no umbrellas left":"Borrow — free 24 h");
+  var fee=reserveFor(t),cr=creditFor(t),msg=[];
+  if(!dyn()){rb.hidden=false;rb.disabled=true;rb.textContent="Reserve — not offered at a fixed price";}
+  else if(sigOn()){rb.hidden=false;rb.disabled=true;rb.textContent="Reserve off during the rainstorm signal";}
+  else if(fee===0){rb.hidden=true;}
+  else {rb.hidden=false;rb.disabled=(n===0||!!S.res);rb.textContent=held?"Held for you until "+S.res.until:(S.res?"You already hold one ("+ST[S.res.k].short+")":"Reserve 15 min — "+money(fee));}
+  if(cr>0){note.className="note credit";note.innerHTML="<b>Returning here? +"+money(cr)+" credit</b>"+(sigOn()?" (doubled: rainstorm signal)":"")+". This rack needs umbrellas before the rain.";}
+  else if(!dyn()){note.className="note off";note.textContent=S.pol==="fixed"?"Fixed price: no return credits, no reserve. Everyone walks up and hopes.":"Weather data only: ops stage a crate at the exits, but no credits or reserve.";}
+  else {note.className="note";note.textContent="Plenty here. No credit for returning; borrowing is free for 24 h.";}
+}
+document.getElementById("shClose").addEventListener("click",closeSheet);
+scrim.addEventListener("click",closeSheet);
+document.getElementById("shBorrow").addEventListener("click",function(){var k=S.sel;closeSheet();document.getElementById("scanStation").value=k;go("scan");});
+document.getElementById("shReserve").addEventListener("click",function(){
+  var k=S.sel,t=tierOf(k,S.h),fee=reserveFor(t);if(!fee||S.res)return;
+  var until=hh(S.h).replace(":00",":20");
+  S.res={k:k,until:until};S.tx.unshift({ic:"⏱",t:"Reserved at "+ST[k].name,d:"Today · "+hh(S.h).replace(":00",":05")+" · held until "+until,a:-fee});
+  flash("Umbrella held at "+ST[k].short+" until "+until+" · "+money(fee),"HOLD");
+  renderSheet();renderWallet();
+});
+
+/* ================= SCAN / RETURN ================= */
+var scanSel=document.getElementById("scanStation");
+ST.forEach(function(s,k){var o=document.createElement("option");o.value=k;o.textContent=s.name;scanSel.appendChild(o);});
+function renderScan(){
+  var res=document.getElementById("scanRes"),btn=document.getElementById("scanBtn");
+  if(S.rental){btn.textContent="Return umbrella #0"+S.rental.no+" instead";}
+  else btn.textContent="Simulate scan";
+}
+document.getElementById("scanBtn").addEventListener("click",function(){
+  var res=document.getElementById("scanRes");
+  if(S.rental){go("return");return;}
+  var k=+scanSel.value,n=left(k,S.h),held=S.res&&S.res.k===k,s=ST[k];
+  if(n===0&&!held){
+    res.className="result bad on";
+    var l=R(k).lostH[S.h];
+    res.innerHTML="<b>Rack empty at "+s.name+"</b>You are one of about "+Math.max(1,Math.round(l))+" people turned away here this hour. "+(dyn()?"Tip: racks in red pay returners a credit, so they refill faster.":"Nothing in a fixed-price network pulls umbrellas back before the rain.");
+    return;
+  }
+  var no=S.umb++;var t0=hh(S.h).replace(":00",":05");
+  S.rental={no:no,k:k,t:t0};if(held)S.res=null;
+  S.tx.unshift({ic:"☂",t:"Borrowed #0"+no+" at "+s.name,d:"Today · "+t0+" · free 24 h",a:0});
+  res.className="result ok on";
+  res.innerHTML="<b>Umbrella #0"+no+" unlocked · free until "+t0+" tomorrow</b>Canopy sponsor: Brightwave Tea. Late fees start after 24 h"+(sigOn()?" (paused during the rainstorm signal)":"")+".";
+  renderAll();
+  setTimeout(function(){if(S.rental&&S.view==="scan")openModal("mRain");},650);
+});
+function renderReturn(){
+  var list=document.getElementById("retList"),intro=document.getElementById("retIntro");
+  document.getElementById("retNo").textContent=S.rental?"#0"+S.rental.no:"";
+  if(!S.rental){list.innerHTML='<div class="card small">You have no umbrella out. Scan a rack to borrow one — free for 24 h.</div>';intro.hidden=true;return;}
+  intro.hidden=false;
+  intro.textContent=dyn()?"Sorted by credit: racks that are running short pay you for bringing your umbrella there.":"No return credits under the "+POL[S.pol].name+" policy. Any rack with space will do.";
+  var rows=ST.map(function(s,k){var t=tierOf(k,S.h);return {k:k,t:t,c:creditFor(t),n:left(k,S.h)};});
+  rows.sort(function(a,b){return b.c-a.c||a.n-b.n;});
+  list.innerHTML="";
+  rows.forEach(function(r){
+    var s=ST[r.k],b=document.createElement("button");b.className="lrow";
+    b.innerHTML='<span class="dot" style="background:'+TC[r.t]+';width:12px;height:12px"></span><span class="grow"><span class="nm">'+s.name+'</span><br><span class="small muted">'+r.n+' left · <span class="tier '+r.t+'">'+TN[r.t]+'</span></span></span><span class="cr '+(r.c?"pos":"muted")+'">'+(r.c?"+"+money(r.c):"—")+'</span>';
+    b.setAttribute("aria-label","Return at "+s.name+(r.c?", earn "+money(r.c)+" credit":", no credit"));
+    b.addEventListener("click",function(){doReturn(r.k);});
+    list.appendChild(b);
+  });
+}
+function doReturn(k){
+  var t=tierOf(k,S.h),c=creditFor(t),s=ST[k],no=S.rental.no,res=document.getElementById("retRes");
+  var tm=hh(S.h).replace(":00",":40");
+  S.tx.unshift({ic:"↩",t:"Returned #0"+no+" at "+s.name,d:"Today · "+tm+" · HK$0 rental",a:0});
+  if(c>0){S.bal+=c;S.tx.unshift({ic:"★",t:"Return credit · "+s.short+" was "+TN[t],d:"Today · "+tm+(sigOn()?" · doubled (signal)":""),a:c});}
+  S.rental=null;
+  res.className="result ok on";
+  res.innerHTML=c>0?"<b>+"+money(c)+" credit earned</b>Thanks for bringing #0"+no+" to "+s.name+". Balance "+money(S.bal,1)+".":"<b>Returned at "+s.name+"</b>"+(dyn()?"No credit: this rack has plenty.":"Rental HK$0. (No credits under this policy.)");
+  renderAll();res.className="result ok on";
+}
+document.getElementById("rentalReturn").addEventListener("click",function(){go("return");});
+
+/* ================= WALLET / SPONSOR ================= */
+function renderWallet(){
+  document.getElementById("bal").textContent=money(S.bal,1);
+  document.getElementById("txList").innerHTML=S.tx.map(function(x){
+    var a=x.a>0?'<span class="amt pos">+'+money(x.a,1)+'</span>':x.a<0?'<span class="amt neg">−'+money(-x.a,1)+'</span>':'<span class="amt muted">HK$0.00</span>';
+    return '<div class="tx"><span class="ico" aria-hidden="true">'+x.ic+'</span><span class="grow">'+x.t+'<br><span class="small muted">'+x.d+'</span></span>'+a+'</div>';}).join("");
+}
+function renderSponsor(c){
+  document.getElementById("spB").textContent=Math.round(c.served);
+  var rainSv=0;if(S.h>=17)ST.forEach(function(s,k){for(var i=17;i<=S.h;i++)rainSv+=R(k).served[i];});
+  document.getElementById("spI").textContent=Math.round(rainSv);
+  document.getElementById("spL").textContent=Math.round(c.lost);
+  document.getElementById("spT").innerHTML=sigOn()?'<span class="tier r">LIVE</span> <b>Nimbus Noodle Bar</b> owns today: app splash, pop-up slot and every rack QR page. <b>HK$1,500 / day</b>.':'<span class="tier g">Standby</span> Sells as <b>HK$1,500 / day</b> the moment HKO hoists an Amber, Red or Black rainstorm signal.';
+}
+
+/* ================= PRESENTER ================= */
+function renderCounters(c){
+  document.getElementById("cS").textContent=Math.round(c.served);
+  document.getElementById("cL").textContent=Math.round(c.lost);
+  document.getElementById("cC").textContent=money(c.credits);
+  document.getElementById("cR").textContent=money(c.fees);
+  document.getElementById("cX").textContent=c.crates;
+}
+function pct(v){return Math.round(v*100)+"%";}
+function renderNarr(){
+  var h=S.h,p=S.pol,t="",hk=RUNS[p][0],ng=RUNS[p][1],L=lostAt(h);
+  var hhLeft=left(0,h);
+  if(h===14) t="Dry afternoon. Every rack is <b>green</b> and borrowing is free. Nothing to price yet — watch the two exits, Hang Hau B1 and North Gate.";
+  else if(h===15){
+    if(p==="fixed") t="HKO's nowcast shows a heavy shower from 17:00, but a fixed-price network does not act on it. Hang Hau B1 holds only <b>"+hhLeft+"</b> umbrellas for the ~30 people who will want one at 17:00.";
+    else t="<b>HKO nowcast: rain from 17:00.</b> The pressure index (next 2 h borrowings ÷ umbrellas on the rack) turns both exits <b>red</b>. Ops book a crate run for 16:00.";
+    if(p==="dynamic") t+=" <b>Return credits switch on</b>: HK$2 to return at a red rack, HK$1 at amber. Anyone who wants certainty can reserve for HK$3.";
+  } else if(h===16){
+    if(p==="fixed") t="Still dry. Nothing is staged: the racks are where last night's returns left them.";
+    else t="<b>Crate staged</b>: +15 umbrellas at Hang Hau B1 and North Gate, taken from quiet racks. North Gate drops from red to <b>"+TN[tierOf(1,16)]+"</b>.";
+    if(p==="dynamic") t+=" Credits have pulled about <b>"+Math.round((75+50)*IMB*RESP)+"</b> extra returns into the two exits since 15:00.";
+  } else if(h===17){
+    t="<b>The shower.</b> 35% of the day's borrowings land in this one hour. ";
+    t+=L.n>=0.5?"<b>"+Math.round(L.n)+" people turned away</b> ("+L.who.join(", ")+").":"Every borrower is served.";
+    if(p==="fixed") t+=" Hang Hau B1 empties within minutes.";
+    else if(p==="weather") t+=" The crate saves North Gate; Hang Hau B1 still runs dry.";
+    else t+=" Crate plus credits keep North Gate stocked and cut the queue at Hang Hau B1.";
+    if(dyn()) t+=" Returners heading to red racks see the credit on the map.";
+  } else if(h===18){
+    t="Evening commute in the rain. "+(L.n>=0.5?"<b>"+Math.round(L.n)+"</b> more turned away this hour. ":"")+(crateOn()?"The crate leaves at 18:59; leftovers go back to quiet racks.":"Exit racks are empty until returns arrive.");
+  } else if(h<21){
+    t="Rain easing. The two exit racks stay low: returns arrive about 10 hours after borrowing, so tomorrow morning's commuters bring them back. Campus racks stay well stocked. "+(L.n>=0.5?"<b>"+Math.round(L.n)+"</b> turned away this hour.":"");
+  } else {
+    t="<b>Day summary · "+POL[p].name+"</b>: Hang Hau B1 turns away <b>"+pct(hk.lost)+"</b> of its borrowers, North Gate <b>"+pct(ng.lost)+"</b>. The exits refill overnight from returns and the 03:00 rebalancing round; the quiet racks never ran short.";
+  }
+  if(sigOn()) t+=" <br><b>Rainstorm signal:</b> reserve off, credits doubled, late fees paused — no price rises during a signal. The takeover sponsor owns the splash (HK$1,500/day).";
+  document.getElementById("narr").innerHTML='<span class="when">'+hh(h)+' · '+POL[p].name+'</span>'+t;
+}
+function renderTable(){
+  var cols=["fixed","weather","dynamic"],hdr=["Fixed price","+ Weather","+ Dynamic"];
+  var h='<thead><tr><th>Station (rain-day borrowings)</th>'+cols.map(function(c,i){return '<th class="'+(c===S.pol?"act":"")+'">'+hdr[i]+'</th>';}).join("")+'</tr></thead><tbody>';
+  [0,1].forEach(function(k){h+='<tr><td>'+ST[k].name+' ('+ST[k].B+')</td>'+cols.map(function(c){return '<td class="'+(c===S.pol?"act":"")+'">'+pct(RUNS[c][k].lost)+'</td>';}).join("")+'</tr>';});
+  var others=[2,3,4,5,6];
+  h+='<tr><td>5 other stations (6 to 12)</td>'+cols.map(function(c){var m=Math.max.apply(null,others.map(function(k){return RUNS[c][k].lost;}));return '<td class="'+(c===S.pol?"act":"")+'">'+pct(m)+'</td>';}).join("")+'</tr></tbody>';
+  document.getElementById("cmp").innerHTML=h;
+}
+
+/* ================= NAV / OVERLAYS ================= */
+var TITLES={map:["RainBorrow","Hang Hau · HKUST"],weather:["Weather","HKO data"],scan:["Scan to rent","Free for 24 h"],"return":["Return","Credits by rack"],wallet:["Wallet","Profile"],sponsor:["Sponsor","Advertiser view"]};
+function go(v){
+  if(v!=="map")closeSheet();
+  S.view=v;
+  document.querySelectorAll(".view").forEach(function(el){el.classList.toggle("on",el.id==="v-"+v);});
+  document.querySelectorAll(".nav button").forEach(function(b){var g=b.getAttribute("data-go");if(g===v||(v==="return"&&g==="scan"))b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  document.getElementById("appTitle").textContent=TITLES[v][0];document.getElementById("appSub").textContent=TITLES[v][1];
+  if(v!=="scan")document.getElementById("scanRes").className="result";
+  if(v!=="return")document.getElementById("retRes").className="result";
+  renderAll();
+}
+document.querySelectorAll(".nav button").forEach(function(b){b.addEventListener("click",function(){go(b.getAttribute("data-go"));});});
+document.getElementById("wxMode").addEventListener("click",function(){S.wx=!S.wx;renderWeather();});
+document.getElementById("wxGo").addEventListener("click",function(){S.wx=true;go("map");});
+var modalReturn=null;
+function openModal(id){modalReturn=document.activeElement;var m=document.getElementById(id);
+  if(id==="mRain"){var rain=S.h>=17||sigOn();document.getElementById("mRainTag").textContent=rain?"Rain moment · sponsored":"Canopy sponsor · sponsored";document.getElementById("mRainT").textContent=rain?"Caught in the rain? Warm up on us.":"Your umbrella is on Brightwave Tea.";}
+  m.classList.add("on");m.querySelector(".x").focus();}
+function closeModal(id){document.getElementById(id).classList.remove("on");if(modalReturn&&modalReturn.focus)modalReturn.focus();}
+["mRain","mStorm"].forEach(function(id){
+  document.getElementById(id+"X").addEventListener("click",function(){closeModal(id);});
+  document.getElementById(id==="mRain"?"mRainOk":"mStormOk").addEventListener("click",function(){closeModal(id);});
+  document.getElementById(id).addEventListener("click",function(e){if(e.target.id===id)closeModal(id);});
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){if(document.querySelector(".modal.on")){closeModal(document.querySelector(".modal.on").id);}else closeSheet();}});
+var toastT=null;
+function flash(msg,tag){var t=document.getElementById("toast");document.getElementById("toastTxt").textContent=msg;t.querySelector(".tg").textContent=tag||"OPS";t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("on");},3600);}
+
+/* ================= CLOCK ================= */
+var scrub=document.getElementById("scrub");
+function setHour(h){
+  var prev=S.h;S.h=h;scrub.value=h;
+  if(S.res&&h!==prev)S.res=null; // a 15-minute hold does not survive the hour
+  if(h===16&&crateOn()&&S.lastToastH!==16){flash("Crate dispatched to Hang Hau Exit B1 and North Gate (+15 each)");S.lastToastH=16;}
+  if(h!==16)S.lastToastH=null;
+  renderAll();
+}
+function setPlaying(on){
+  S.playing=on;var b=document.getElementById("play");
+  b.setAttribute("aria-label",on?"Pause":"Play");
+  document.getElementById("playIc").innerHTML=on?'<rect x="3" y="2" width="3.6" height="12" rx="1" fill="currentColor"/><rect x="9.4" y="2" width="3.6" height="12" rx="1" fill="currentColor"/>':'<path d="M4 2l10 6-10 6z" fill="currentColor"/>';
+  clearInterval(S.timer);
+  if(on){if(S.h>=21)setHour(14);S.timer=setInterval(function(){if(S.h>=21){setPlaying(false);return;}setHour(S.h+1);},1000);}
+}
+document.getElementById("play").addEventListener("click",function(){setPlaying(!S.playing);});
+scrub.addEventListener("input",function(){setPlaying(false);setHour(+scrub.value);});
+document.querySelectorAll("#pol button").forEach(function(b){b.addEventListener("click",function(){
+  S.pol=b.getAttribute("data-pol");S.res=null;
+  document.querySelectorAll("#pol button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});
+  if(S.h===16&&crateOn())flash("Crate dispatched to Hang Hau Exit B1 and North Gate (+15 each)");
+  renderAll();});});
+document.querySelectorAll("#sig button").forEach(function(b){b.addEventListener("click",function(){
+  var was=S.sig;S.sig=b.getAttribute("data-sig");if(sigOn())S.res=null;
+  document.querySelectorAll("#sig button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});
+  renderAll();
+  if(sigOn()&&S.sig!==was){if(S.view!=="map")go("map");openModal("mStorm");}
+});});
+
+function renderAll(){
+  var c=counters(S.h);
+  document.getElementById("stTime").textContent=hh(S.h);
+  document.getElementById("pTime").textContent=hh(S.h);
+  renderPins();renderWeather();renderSheet();renderScan();renderReturn();renderWallet();renderSponsor(c);
+  renderCounters(c);renderNarr();renderTable();
+  var r=document.getElementById("rental");
+  if(S.rental){r.classList.add("on");document.getElementById("rentalTxt").innerHTML="<b>Umbrella #0"+S.rental.no+"</b> · out since "+S.rental.t+"<br><span class='muted'>HK$0.00 so far · free until "+S.rental.t+" tomorrow</span>";}
+  else r.classList.remove("on");
+  document.getElementById("legend").style.display=S.rental?"none":"flex";
+}
+renderAll();
+})();
+</script>
+</body>
+</html>
